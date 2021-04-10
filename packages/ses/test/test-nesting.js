@@ -1,5 +1,5 @@
 import test from 'ava';
-import '../ses.js';
+import 'ses/lockdown';
 
 lockdown();
 

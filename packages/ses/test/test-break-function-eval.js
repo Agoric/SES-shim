@@ -1,4 +1,4 @@
-import '../lockdown.js';
+import 'ses/lockdown';
 import './lockdown-safe.js';
 import test from 'ava';
 
@@ -81,7 +81,7 @@ test('function-injection-2', t => {
   // that the body adds, allowing the body to terminate the function
   // definition. Then the body defines a new expression, which creates an
   // object with a property named "x" which captures the same 'this' you
-  // could have gotten with plain safe eval().
+  // could have gotten with plain safe eval.
 
   // markm tried to protect against this by injecting an extra trailing
   // block comment to the end of the arguments, creating a body like this

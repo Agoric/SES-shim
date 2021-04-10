@@ -1,4 +1,4 @@
-import '../lockdown.js';
+import 'ses/lockdown';
 import test from 'ava';
 import { overrideTester } from './override-tester.js';
 

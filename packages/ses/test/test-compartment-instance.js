@@ -1,5 +1,5 @@
 import test from 'ava';
-import '../lockdown.js';
+import 'ses/lockdown';
 
 test('Compartment instance', t => {
   t.plan(9);

@@ -1,5 +1,5 @@
 import test from 'ava';
-import '../ses.js';
+import 'ses/lockdown';
 
 test('endowments own properties are mentionable', t => {
   t.plan(1);
@@ -31,7 +31,8 @@ test('endowments prototypically inherited properties are not mentionable', t => 
   const compartment = new Compartment(endowments, modules);
 
   t.throws(() => compartment.evaluate('hello'), {
-    message: /hello is not defined/,
+    message: /hello/,
+    instanceOf: ReferenceError,
   });
 });
 
@@ -91,7 +92,8 @@ test('global lexicals prototypically inherited properties are not mentionable', 
   const compartment = new Compartment(endowments, modules, { globalLexicals });
 
   t.throws(() => compartment.evaluate('hello'), {
-    message: /hello is not defined/,
+    message: /hello/,
+    instanceOf: ReferenceError,
   });
 });
 
@@ -140,7 +142,8 @@ test('global lexicals are constant', t => {
   const compartment = new Compartment(endowments, modules, { globalLexicals });
 
   t.throws(() => compartment.evaluate('hello = "Dave."'), {
-    message: /Assignment to constant/,
+    message: /const/,
+    instanceOf: TypeError,
   });
 });
 

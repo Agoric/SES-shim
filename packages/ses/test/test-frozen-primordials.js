@@ -1,5 +1,5 @@
 import test from 'ava';
-import '../lockdown.js';
+import 'ses/lockdown';
 import { getOwnPropertyDescriptor } from '../src/commons.js';
 
 test('check if override-protected primordials are frozen', t => {

@@ -126,7 +126,7 @@ test('proxied exports is not a constructor', t => {
       const Constructor = exportsProxy;
       return new Constructor();
     },
-    { message: /is not a constructor$/ },
+    { message: /constructor/ },
     'proxied exports must not be constructable',
   );
 });

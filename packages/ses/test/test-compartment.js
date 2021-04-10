@@ -1,5 +1,5 @@
 import test from 'ava';
-import '../ses.js';
+import 'ses/lockdown';
 
 lockdown();
 
@@ -83,18 +83,22 @@ test('main use case', t => {
   function power(a) {
     return a + 1;
   }
+  const attenuate = `(
   function attenuate(arg) {
     if (arg <= 0) {
       throw new TypeError('only positive numbers');
     }
     return power(arg);
   }
-  const attenuatedPower = new Compartment({ power }).evaluate(`(${attenuate})`);
+  )`;
+  const attenuatedPower = new Compartment({ power }).evaluate(attenuate);
+  const use = `(
   function use(arg) {
     return power(arg);
   }
+  )`;
   const c = new Compartment({ power: attenuatedPower });
-  const user = c.evaluate(`(${use})`);
+  const user = c.evaluate(use);
   t.is(user(1), 2);
   t.throws(() => user(-1), { instanceOf: TypeError });
 });

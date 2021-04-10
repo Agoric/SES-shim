@@ -15,7 +15,8 @@
     "packages/ses-ava",
     "packages/ses-integration-test",
     "packages/test262-runner",
-    "packages/transform-module"
+    "packages/transform-module",
+    "packages/xsnap"
   ],
   "engines": {
     "node": ">=12.17.0"

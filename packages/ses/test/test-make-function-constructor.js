@@ -1,4 +1,4 @@
-import '../lockdown.js';
+import 'ses/lockdown';
 import './lockdown-safe.js';
 import test from 'ava';
 import { makeFunctionConstructor } from '../src/make-function-constructor.js';

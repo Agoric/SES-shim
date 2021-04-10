@@ -1,0 +1,3 @@
+[submodule "packages/xsnap/moddable"]
+	path = packages/xsnap/moddable
+	url = https://github.com/Moddable-OpenSource/moddable.git

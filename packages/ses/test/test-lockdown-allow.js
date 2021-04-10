@@ -1,5 +1,5 @@
 import test from 'ava';
-import '../ses.js';
+import 'ses/lockdown';
 
 test('lockdown returns boolean or throws in downgraded SES', t => {
   t.plan(6);

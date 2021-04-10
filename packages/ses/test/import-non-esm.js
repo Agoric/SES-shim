@@ -1,6 +1,6 @@
 import test from 'ava';
 import { resolveNode } from './node.js';
-import '../ses.js';
+import 'ses/lockdown';
 
 test('import a non-ESM', async t => {
   t.plan(2);

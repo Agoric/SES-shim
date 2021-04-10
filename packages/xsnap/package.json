@@ -1,0 +1,75 @@
+{
+  "name": "@agoric/xsnap",
+  "version": "0.4.0",
+  "description": "Description forthcoming.",
+  "author": "Agoric",
+  "license": "Apache-2.0",
+  "parsers": {
+    "js": "mjs"
+  },
+  "main": "./src/index.js",
+  "bin": {
+    "ava-xs": "./src/ava-xs.js",
+    "xsrepl": "./src/xsrepl"
+  },
+  "scripts": {
+    "repl": "node -r esm src/xsrepl.js",
+    "build:bundle": "rollup --config rollup.config.js",
+    "build:bin": "node -r esm src/build.js",
+    "build": "yarn build:bin && yarn build:bundle",
+    "clean": "rm -rf build",
+    "lint": "yarn lint:js && yarn lint:types",
+    "lint:js": "eslint 'src/**/*.js' 'lib/**/*.js'",
+    "lint:types": "tsc -p jsconfig.json",
+    "lint-fix": "eslint --fix 'src/**/*.js' 'lib/**/*.js'",
+    "lint-check": "yarn lint",
+    "test": "ava",
+    "test:xs": "exit 0"
+  },
+  "dependencies": {
+    "@agoric/assert": "^0.2.4",
+    "@agoric/bundle-source": "^1.2.4",
+    "@agoric/eslint-config": "^0.3.3",
+    "@agoric/eventual-send": "^0.13.4",
+    "@agoric/install-ses": "^0.5.4",
+    "esm": "^3.2.5",
+    "glob": "^7.1.6",
+    "ses": "^0.12.6"
+  },
+  "devDependencies": {
+    "@agoric/eslint-plugin": "^0.2.3",
+    "@rollup/plugin-node-resolve": "^6.1.0",
+    "ava": "^3.12.1",
+    "rollup-plugin-terser": "^5.1.3"
+  },
+  "files": [
+    "LICENSE*",
+    "lib",
+    "makefiles",
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@agoric"
+    ],
+    "ignorePatterns": [
+      "examples/**/*.js"
+    ]
+  },
+  "ava": {
+    "files": [
+      "test/**/test-*.js"
+    ],
+    "require": [
+      "esm"
+    ],
+    "timeout": "2m"
+  },
+  "prettier": {
+    "trailingComma": "all",
+    "singleQuote": true
+  }
+}
