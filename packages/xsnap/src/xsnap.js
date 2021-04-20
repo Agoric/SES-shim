@@ -79,7 +79,9 @@ export function xsnap(options) {
   }
 
   let bin = new URL(
-    `../build/bin/${platform}/${debug ? 'debug' : 'release'}/xsnap`,
+    `../xsnap-native/xsnap/build/bin/${platform}/${
+      debug ? 'debug' : 'release'
+    }/xsnap-ava`,
     importMetaUrl,
   ).pathname;
 

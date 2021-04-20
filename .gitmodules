@@ -1,3 +1,6 @@
 [submodule "packages/xsnap/moddable"]
 	path = packages/xsnap/moddable
 	url = https://github.com/Moddable-OpenSource/moddable.git
+[submodule "packages/xsnap/xsnap-native"]
+	path = packages/xsnap/xsnap-native
+	url = https://github.com/agoric-labs/xsnap-pub
