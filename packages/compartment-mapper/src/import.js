@@ -11,7 +11,7 @@
 
 import { compartmentMapForNodeModules } from './node-modules.js';
 import { search } from './search.js';
-import { link } from './assemble.js';
+import { link } from './link.js';
 import { makeImportHookMaker } from './import-hook.js';
 import { parseJson } from './parse-json.js';
 import { parseCjs } from './parse-cjs.js';

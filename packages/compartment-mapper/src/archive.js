@@ -16,7 +16,7 @@ import { writeZip } from '@endo/zip';
 import { resolve } from './node-module-specifier.js';
 import { compartmentMapForNodeModules } from './node-modules.js';
 import { search } from './search.js';
-import { link } from './assemble.js';
+import { link } from './link.js';
 import { makeImportHookMaker } from './import-hook.js';
 import { parseJson } from './parse-json.js';
 import { parseArchiveCjs } from './parse-archive-cjs.js';
