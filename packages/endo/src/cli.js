@@ -1,11 +1,17 @@
 /* eslint no-shadow: [0] */
+import '@agoric/babel-standalone';
 import './lockdown.js';
 import subprocess from 'child_process';
 import {
-  search,
   writeArchive,
-  compartmentMapForNodeModules,
+  mapLocation,
+  hashLocation,
+  loadArchive,
 } from '@endo/compartment-mapper';
+import {
+  makeNodeReadPowers,
+  makeNodeWritePowers,
+} from '@endo/compartment-mapper/node-powers.js';
 
 const mitmPath = new URL('../mitm', import.meta.url).pathname;
 
@@ -41,20 +47,59 @@ async function parameter(args, handle, usage) {
   return handle(arg, rest);
 }
 
-async function run(args, { cwd, read, write, stdout, env }) {
+async function run(
+  args,
+  { cwd, read, canonical, computeSha512, write, stdout, env },
+) {
+  const currentLocation = new URL(`${cwd()}/`, 'file:///');
+
+  function locate(path) {
+    return new URL(path, currentLocation);
+  }
+
   async function map(args) {
     async function handleEntry(applicationPath, args) {
       if (args.length) {
         return usage(`unexpected arguments: ${JSON.stringify(args)}`);
       }
-      const currentLocation = new URL(`${cwd()}/`, 'file:///');
-      const applicationLocation = new URL(applicationPath, currentLocation);
-      const { packageLocation } = await search(read, applicationLocation);
-      const compartmentMap = await compartmentMapForNodeModules(
-        read,
-        packageLocation,
+      const applicationLocation = locate(applicationPath);
+      const compartmentMapBytes = await mapLocation(
+        { read, canonical, computeSha512 },
+        applicationLocation,
       );
-      stdout.write(`${JSON.stringify(compartmentMap, null, 2)}\n`);
+      stdout.write(compartmentMapBytes);
+      return 0;
+    }
+    return parameter(args, handleEntry, noEntryUsage);
+  }
+
+  async function hash(args) {
+    async function handleEntry(applicationPath, args) {
+      if (args.length) {
+        return usage(`unexpected arguments: ${JSON.stringify(args)}`);
+      }
+      const applicationLocation = locate(applicationPath);
+      const sha512 = await hashLocation(
+        { read, canonical, computeSha512 },
+        applicationLocation,
+      );
+      stdout.write(`${sha512}\n`);
+      return 0;
+    }
+    return parameter(args, handleEntry, noEntryUsage);
+  }
+
+  async function hashArchive(args) {
+    async function handleEntry(archivePath, args) {
+      if (args.length) {
+        return usage(`unexpected arguments: ${JSON.stringify(args)}`);
+      }
+      const archiveLocation = locate(archivePath);
+      const { sha512 } = await loadArchive(
+        { read, canonical, computeSha512 },
+        archiveLocation,
+      );
+      stdout.write(`${sha512}\n`);
       return 0;
     }
     return parameter(args, handleEntry, noEntryUsage);
@@ -66,9 +111,8 @@ async function run(args, { cwd, read, write, stdout, env }) {
         if (args.length) {
           return usage(`unexpected arguments: ${JSON.stringify(args)}`);
         }
-        const currentLocation = new URL(`${cwd()}/`, 'file:///');
-        const archiveLocation = new URL(archivePath, currentLocation);
-        const applicationLocation = new URL(applicationPath, currentLocation);
+        const archiveLocation = locate(archivePath);
+        const applicationLocation = locate(applicationPath);
         await writeArchive(write, read, archiveLocation, applicationLocation);
         return 0;
       }
@@ -85,35 +129,20 @@ async function run(args, { cwd, read, write, stdout, env }) {
     return new Promise(resolve => child.on('exit', resolve));
   }
 
-  return subcommand(args, { map, archive, exec });
+  return subcommand(args, { map, hash, hagar: hashArchive, archive, exec });
 }
 
 export async function main(process, modules) {
-  const { fs } = modules;
+  const { fs, crypto } = modules;
   const { cwd, stdout, env } = process;
 
-  // Filesystem errors often don't have stacks:
-
-  async function read(location) {
-    try {
-      return await fs.readFile(new URL(location).pathname);
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  }
-
-  async function write(location, content) {
-    try {
-      return await fs.writeFile(new URL(location).pathname, content);
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  }
+  const readPowers = makeNodeReadPowers(fs, crypto);
+  const writePowers = makeNodeWritePowers(fs);
 
   try {
     process.exitCode = await run(process.argv.slice(2), {
-      read,
-      write,
+      ...readPowers,
+      ...writePowers,
       cwd,
       stdout,
       env,
