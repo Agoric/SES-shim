@@ -10,10 +10,11 @@
 
 import 'ses';
 import fs from 'fs';
+import crypto from 'crypto';
 import { writeArchive } from '../archive.js';
 import { makeNodeReadPowers, makeNodeWritePowers } from '../src/node-powers.js';
 
-const readPowers = makeNodeReadPowers(fs);
+const readPowers = makeNodeReadPowers(fs, crypto);
 const { write } = makeNodeWritePowers(fs);
 
 const fixture = new URL(

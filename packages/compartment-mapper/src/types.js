@@ -54,6 +54,7 @@ export const moduleJSDocTypes = true;
  * @property {string} [module]
  * @property {string} [location]
  * @property {Language} [parser]
+ * @property {string} [sha512] in base 16, hex
  * @property {string} [exit]
  */
 
@@ -112,8 +113,15 @@ export const moduleJSDocTypes = true;
  */
 
 /**
+ * @callback HashFn
+ * @param {Uint8Array} bytes
+ * @returns {string} hash
+ */
+
+/**
  * @typedef {Object} Application
  * @property {ExecuteFn} import
+ * @property {string} [sha512]
  */
 
 /**
@@ -131,6 +139,14 @@ export const moduleJSDocTypes = true;
  * @typedef {Object} ReadPowers
  * @property {ReadFn} read
  * @property {CanonicalFn} canonical
+ * @property {HashFn} [computeSha512]
+ */
+
+/**
+ * @typedef {Object} HashPowers
+ * @property {ReadFn} read
+ * @property {CanonicalFn} canonical
+ * @property {HashFn} computeSha512
  */
 
 /**
@@ -222,6 +238,7 @@ export const moduleJSDocTypes = true;
  * @typedef {Object} ModuleSource
  * @property {string} [location]
  * @property {Uint8Array} [bytes]
+ * @property {string} [sha512] in base16, hex
  * @property {Language} [parser]
  * @property {string} [exit]
  * @property {StaticModuleType} [record]

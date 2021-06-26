@@ -1,18 +1,25 @@
 // @ts-check
 
 /** @typedef {import('./types.js').ReadPowers} ReadPowers */
+/** @typedef {import('./types.js').HashFn} HashFn */
 /** @typedef {import('./types.js').WritePowers} WritePowers */
 
 /**
  * @param {typeof import('fs')} fs
+ * @param {typeof import('crypto')} [crypto]
  * @returns {ReadPowers}
  */
-export const makeNodeReadPowers = fs => {
+export const makeNodeReadPowers = (fs, crypto = undefined) => {
   /**
    * @param {string} location
    */
-  const read = async location =>
-    fs.promises.readFile(new URL(location).pathname);
+  const read = async location => {
+    try {
+      return await fs.promises.readFile(new URL(location).pathname);
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  };
 
   /**
    * There are two special things about the canonical function the compartment
@@ -45,7 +52,16 @@ export const makeNodeReadPowers = fs => {
     }
   };
 
-  return { read, canonical };
+  /** @type {HashFn=} */
+  const computeSha512 = crypto
+    ? bytes => {
+        const hash = crypto.createHash('sha512');
+        hash.update(bytes);
+        return hash.digest().toString('hex');
+      }
+    : undefined;
+
+  return { read, canonical, computeSha512 };
 };
 
 /**
@@ -57,8 +73,13 @@ export const makeNodeWritePowers = fs => {
    * @param {string} location
    * @param {Uint8Array} data
    */
-  const write = async (location, data) =>
-    fs.promises.writeFile(new URL(location).pathname, data);
+  const write = async (location, data) => {
+    try {
+      return await fs.promises.writeFile(new URL(location).pathname, data);
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  };
 
   return { write };
 };

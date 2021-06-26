@@ -1,5 +1,6 @@
 import 'ses';
 import fs from 'fs';
+import crypto from 'crypto';
 import test from 'ava';
 import {
   loadLocation,
@@ -9,6 +10,7 @@ import {
   parseArchive,
   loadArchive,
   importArchive,
+  hashLocation,
 } from '../index.js';
 import { makeNodeReadPowers } from '../src/node-powers.js';
 
@@ -17,7 +19,7 @@ const fixture = new URL(
   import.meta.url,
 ).toString();
 const archiveFixture = new URL('app.agar', import.meta.url).toString();
-const readPowers = makeNodeReadPowers(fs);
+const readPowers = makeNodeReadPowers(fs, crypto);
 
 const globals = {
   globalProperty: 42,
@@ -291,4 +293,107 @@ test('no transitive dev dependencies', async t => {
       message: /Cannot find external module "indirect"/,
     },
   );
+});
+
+test('makeArchive / parseArchive, but with sha512 corruption', async t => {
+  t.plan(1);
+  await setup();
+
+  const { computeSha512 } = readPowers;
+
+  const corruptSha512 = bytes => {
+    const hash = computeSha512(bytes);
+    return `b4d${hash}`;
+  };
+
+  const archive = await makeArchive(
+    {
+      ...readPowers,
+      computeSha512: corruptSha512,
+    },
+    fixture,
+    {
+      modules,
+      dev: true,
+    },
+  );
+
+  const application = await parseArchive(archive, 'app.agar', {
+    computeSha512,
+  });
+
+  await t.throwsAsync(
+    () =>
+      application.import({
+        globals,
+        globalLexicals,
+        modules,
+        Compartment,
+      }),
+    {
+      message: /failed a SHA-512 integrity check/,
+    },
+  );
+});
+
+test('archive must have hashes if read with a hasher', async t => {
+  t.plan(1);
+  await setup();
+
+  const archive = await makeArchive(
+    {
+      ...readPowers,
+      computeSha512: undefined,
+    },
+    fixture,
+    {
+      modules,
+      dev: true,
+    },
+  );
+
+  const { computeSha512 } = readPowers;
+
+  const application = await parseArchive(archive, 'app.agar', {
+    computeSha512,
+  });
+
+  await t.throwsAsync(
+    () =>
+      application.import({
+        globals,
+        globalLexicals,
+        modules,
+        Compartment,
+      }),
+    {
+      message: /does not present a SHA-512 consistent hash as is required when instantiating an archive with a computeSha512 capability/,
+    },
+  );
+});
+
+test('makeArchive / parseArchive / hashArchive consistency', async t => {
+  t.plan(3);
+  await setup();
+
+  const hash = await hashLocation(readPowers, fixture, {
+    modules,
+    dev: true,
+  });
+
+  const archiveBytes = await makeArchive(readPowers, fixture, {
+    modules,
+    dev: true,
+  });
+
+  const { computeSha512 } = readPowers;
+  const archive = await parseArchive(archiveBytes, 'memory:app.agar', {
+    modules,
+    dev: true,
+    computeSha512,
+  });
+
+  t.assert(hash !== undefined, 'location has hash');
+  t.assert(archive.sha512 !== undefined, 'archive has hash');
+  t.is(hash, archive.sha512, 'hashes are equal');
 });

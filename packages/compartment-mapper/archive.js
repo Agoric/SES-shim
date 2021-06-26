@@ -1,1 +1,6 @@
-export { makeArchive, writeArchive } from './src/archive.js';
+export {
+  makeArchive,
+  writeArchive,
+  mapLocation,
+  hashLocation,
+} from './src/archive.js';
