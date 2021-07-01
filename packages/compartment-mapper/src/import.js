@@ -11,7 +11,7 @@
 
 import { compartmentMapForNodeModules } from './node-modules.js';
 import { search } from './search.js';
-import { assemble } from './assemble.js';
+import { link } from './link.js';
 import { makeImportHookMaker } from './import-hook.js';
 import { parseJson } from './parse-json.js';
 import { parseCjs } from './parse-cjs.js';
@@ -70,7 +70,7 @@ export const loadLocation = async (readPowers, moduleLocation, options) => {
       Compartment,
     } = options;
     const makeImportHook = makeImportHookMaker(read, packageLocation);
-    const compartment = assemble(compartmentMap, {
+    const { compartment } = link(compartmentMap, {
       makeImportHook,
       parserForLanguage,
       globals,

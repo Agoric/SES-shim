@@ -14,7 +14,7 @@
 /** @typedef {import('./types.js').ExecuteOptions} ExecuteOptions */
 
 import { readZip } from '@endo/zip';
-import { assemble } from './assemble.js';
+import { link } from './link.js';
 import { parsePreCjs } from './parse-pre-cjs.js';
 import { parseJson } from './parse-json.js';
 import { parsePreMjs } from './parse-pre-mjs.js';
@@ -167,7 +167,7 @@ export const parseArchive = async (
       archiveLocation,
       computeSha512,
     );
-    const compartment = assemble(compartmentMap, {
+    const { compartment } = link(compartmentMap, {
       makeImportHook,
       parserForLanguage,
       globals,
