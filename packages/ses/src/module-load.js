@@ -104,7 +104,7 @@ const loadWithoutErrorAnnotation = async (
       assert.fail(
         d`Cannot map module ${q(
           moduleSpecifier,
-        )} because the key is not a module exports namespace, or is from another realm`,
+        )} because the value is not a module exports namespace, or is from another realm`,
         ReferenceError,
       );
     }
@@ -127,6 +127,14 @@ const loadWithoutErrorAnnotation = async (
   }
 
   const staticModuleRecord = await importHook(moduleSpecifier);
+
+  if (staticModuleRecord === null || typeof staticModuleRecord !== 'object') {
+    assert.fail(
+      d`importHook must return a promise for an object, for module ${q(
+        moduleSpecifier,
+      )} in compartment ${q(compartment.name)}`,
+    );
+  }
 
   if (staticModuleRecord.record !== undefined) {
     const {
