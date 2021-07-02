@@ -27,8 +27,8 @@ const c1 = new Compartment({}, {}, {
 
 Please help us practice coordinated security bug disclosure, by using the
 instructions in
-[SECURITY.md](https://github.com/Agoric/ses-shim/blob/master/SECURITY.md)
+[SECURITY.md](https://github.com/endojs/endo/blob/master/packages/ses/SECURITY.md)
 to report security-sensitive bugs privately.
 
 For non-security bugs, please use the [regular Issues
-page](https://github.com/Agoric/ses-shim/issues).
+page](https://github.com/endojs/endo/issues).
