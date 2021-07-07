@@ -1,13 +1,17 @@
-/* global globalThis */
-
 import {
+  WeakSet,
+  Error,
+  Object,
   defineProperty,
   entries,
   freeze,
   getOwnPropertyDescriptor,
   getOwnPropertyDescriptors,
+  globalThis,
+  is,
   objectHasOwnProperty,
   values,
+  arrayFilter,
 } from './commons.js';
 
 import {
@@ -16,6 +20,8 @@ import {
   universalPropertyNames,
   whitelist,
 } from './whitelist.js';
+
+const isFunction = obj => typeof obj === 'function';
 
 // Like defineProperty, but throws if it would modify an existing property.
 // We use this to ensure that two conflicting attempts to define the same
@@ -27,7 +33,7 @@ function initProperty(obj, name, desc) {
   if (objectHasOwnProperty(obj, name)) {
     const preDesc = getOwnPropertyDescriptor(obj, name);
     if (
-      !Object.is(preDesc.value, desc.value) ||
+      !is(preDesc.value, desc.value) ||
       preDesc.get !== desc.get ||
       preDesc.set !== desc.set ||
       preDesc.writable !== desc.writable ||
@@ -111,9 +117,7 @@ export const makeIntrinsicsCollector = () => {
     },
     finalIntrinsics() {
       freeze(intrinsics);
-      pseudoNatives = new WeakSet(
-        values(intrinsics).filter(obj => typeof obj === 'function'),
-      );
+      pseudoNatives = new WeakSet(arrayFilter(values(intrinsics), isFunction));
       return intrinsics;
     },
     isPseudoNative(obj) {

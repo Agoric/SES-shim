@@ -11,10 +11,21 @@
 // and eventually connecting it to to the proxied exports.
 
 import { makeAlias } from './module-load.js';
-import { create, freeze } from './commons.js';
+import {
+  Proxy,
+  TypeError,
+  create,
+  freeze,
+  ownKeys,
+  reflectGet,
+  reflectGetOwnPropertyDescriptor,
+  reflectHas,
+  reflectIsExtensible,
+  reflectPreventExtensions,
+} from './commons.js';
+import { assert } from './error/assert.js';
 
-// q, as in quote, for error messages.
-const q = JSON.stringify;
+const { quote: q } = assert;
 
 // `deferExports` creates a module's exports proxy, proxied exports, and
 // activator.
@@ -51,7 +62,7 @@ export const deferExports = () => {
             )} of module exports namespace, the module has not yet begun to execute`,
           );
         }
-        return Reflect.get(proxiedExports, name, receiver);
+        return reflectGet(proxiedExports, name, receiver);
       },
       set(_target, name, _value) {
         throw new TypeError(
@@ -66,7 +77,7 @@ export const deferExports = () => {
             )}, the module has not yet begun to execute`,
           );
         }
-        return Reflect.has(proxiedExports, name);
+        return reflectHas(proxiedExports, name);
       },
       deleteProperty(_target, name) {
         throw new TypeError(
@@ -79,8 +90,7 @@ export const deferExports = () => {
             'Cannot enumerate keys, the module has not yet begun to execute',
           );
         }
-        // return Object.keys(proxiedExports);
-        return Reflect.ownKeys(proxiedExports);
+        return ownKeys(proxiedExports);
       },
       getOwnPropertyDescriptor(_target, name) {
         if (!active) {
@@ -90,7 +100,7 @@ export const deferExports = () => {
             )}, the module has not yet begun to execute`,
           );
         }
-        return Reflect.getOwnPropertyDescriptor(proxiedExports, name);
+        return reflectGetOwnPropertyDescriptor(proxiedExports, name);
       },
       preventExtensions(_target) {
         if (!active) {
@@ -98,7 +108,7 @@ export const deferExports = () => {
             'Cannot prevent extensions of module exports namespace, the module has not yet begun to execute',
           );
         }
-        return Reflect.preventExtensions(proxiedExports);
+        return reflectPreventExtensions(proxiedExports);
       },
       isExtensible() {
         if (!active) {
@@ -106,7 +116,7 @@ export const deferExports = () => {
             'Cannot check extensibility of module exports namespace, the module has not yet begun to execute',
           );
         }
-        return Reflect.isExtensible(proxiedExports);
+        return reflectIsExtensible(proxiedExports);
       },
       getPrototypeOf(_target) {
         return null;

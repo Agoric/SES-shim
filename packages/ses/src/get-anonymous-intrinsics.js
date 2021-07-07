@@ -1,4 +1,16 @@
-import { getOwnPropertyDescriptor, getPrototypeOf } from './commons.js';
+import {
+  Array,
+  FERAL_FUNCTION,
+  Float32Array,
+  Map,
+  RegExp,
+  Set,
+  String,
+  getOwnPropertyDescriptor,
+  getPrototypeOf,
+  iteratorSymbol,
+  matchAllSymbol,
+} from './commons.js';
 import { InertCompartment } from './compartment-shim.js';
 
 /**
@@ -26,10 +38,7 @@ function makeArguments() {
  * @returns {Object}
  */
 export const getAnonymousIntrinsics = () => {
-  const InertFunction = Function.prototype.constructor;
-
-  const SymbolIterator = (typeof Symbol && Symbol.iterator) || '@@iterator';
-  const SymbolMatchAll = (typeof Symbol && Symbol.matchAll) || '@@matchAll';
+  const InertFunction = FERAL_FUNCTION.prototype.constructor;
 
   // 9.2.4.1 %ThrowTypeError%
 
@@ -39,19 +48,19 @@ export const getAnonymousIntrinsics = () => {
   // 21.1.5.2 The %StringIteratorPrototype% Object
 
   // eslint-disable-next-line no-new-wrappers
-  const StringIteratorObject = new String()[SymbolIterator]();
+  const StringIteratorObject = new String()[iteratorSymbol]();
   const StringIteratorPrototype = getPrototypeOf(StringIteratorObject);
 
   // 21.2.7.1 The %RegExpStringIteratorPrototype% Object
   const RegExpStringIterator =
-    RegExp.prototype[SymbolMatchAll] && new RegExp()[SymbolMatchAll]();
+    RegExp.prototype[matchAllSymbol] && new RegExp()[matchAllSymbol]();
   const RegExpStringIteratorPrototype =
     RegExpStringIterator && getPrototypeOf(RegExpStringIterator);
 
   // 22.1.5.2 The %ArrayIteratorPrototype% Object
 
   // eslint-disable-next-line no-array-constructor
-  const ArrayIteratorObject = new Array()[SymbolIterator]();
+  const ArrayIteratorObject = new Array()[iteratorSymbol]();
   const ArrayIteratorPrototype = getPrototypeOf(ArrayIteratorObject);
 
   // 22.2.1 The %TypedArray% Intrinsic Object
@@ -60,12 +69,12 @@ export const getAnonymousIntrinsics = () => {
 
   // 23.1.5.2 The %MapIteratorPrototype% Object
 
-  const MapIteratorObject = new Map()[SymbolIterator]();
+  const MapIteratorObject = new Map()[iteratorSymbol]();
   const MapIteratorPrototype = getPrototypeOf(MapIteratorObject);
 
   // 23.2.5.2 The %SetIteratorPrototype% Object
 
-  const SetIteratorObject = new Set()[SymbolIterator]();
+  const SetIteratorObject = new Set()[iteratorSymbol]();
   const SetIteratorPrototype = getPrototypeOf(SetIteratorObject);
 
   // 25.1.2 The %IteratorPrototype% Object

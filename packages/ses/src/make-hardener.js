@@ -21,8 +21,27 @@
 
 // @ts-check
 
-const { freeze, getOwnPropertyDescriptors, getPrototypeOf } = Object;
-const { ownKeys } = Reflect;
+import {
+  Set,
+  String,
+  TypeError,
+  WeakMap,
+  WeakSet,
+  arrayForEach,
+  freeze,
+  getOwnPropertyDescriptors,
+  getPrototypeOf,
+  isObject,
+  objectHasOwnProperty,
+  ownKeys,
+  setAdd,
+  setForEach,
+  setHas,
+  weakmapGet,
+  weakmapSet,
+  weaksetAdd,
+  weaksetHas,
+} from './commons.js';
 
 /**
  * @typedef {import('../index.js').Harden} Harden
@@ -53,7 +72,7 @@ export const makeHardener = () => {
        * @param {string} [path]
        */
       function enqueue(val, path = undefined) {
-        if (Object(val) !== val) {
+        if (!isObject(val)) {
           // ignore primitives
           return;
         }
@@ -62,13 +81,13 @@ export const makeHardener = () => {
           // future proof: break until someone figures out what it should do
           throw new TypeError(`Unexpected typeof: ${type}`);
         }
-        if (hardened.has(val) || toFreeze.has(val)) {
+        if (weaksetHas(hardened, val) || setHas(toFreeze, val)) {
           // Ignore if this is an exit, or we've already visited it
           return;
         }
         // console.log(`adding ${val} to toFreeze`, val);
-        toFreeze.add(val);
-        paths.set(val, path);
+        setAdd(toFreeze, val);
+        weakmapSet(paths, val, path);
       }
 
       /**
@@ -88,27 +107,25 @@ export const makeHardener = () => {
 
         // get stable/immutable outbound links before a Proxy has a chance to do
         // something sneaky.
-        const path = paths.get(obj) || 'unknown';
+        const path = weakmapGet(paths, obj) || 'unknown';
         const descs = getOwnPropertyDescriptors(obj);
         const proto = getPrototypeOf(obj);
         enqueue(proto, `${path}.__proto__`);
 
-        ownKeys(descs).forEach(name => {
+        arrayForEach(ownKeys(descs), (/** @type {string | symbol} */ name) => {
           const pathname = `${path}.${String(name)}`;
-          // todo uncurried form
-          // todo: getOwnPropertyDescriptors is guaranteed to return well-formed
+          // The 'name' may be a symbol, and TypeScript doesn't like us to
+          // index arbitrary symbols on objects, so we pretend they're just
+          // strings.
+          const desc = descs[/** @type {string} */ (name)];
+          // getOwnPropertyDescriptors is guaranteed to return well-formed
           // descriptors, but they still inherit from Object.prototype. If
           // someone has poisoned Object.prototype to add 'value' or 'get'
           // properties, then a simple 'if ("value" in desc)' or 'desc.value'
           // test could be confused. We use hasOwnProperty to be sure about
           // whether 'value' is present or not, which tells us for sure that
           // this is a data property.
-          // The 'name' may be a symbol, and TypeScript doesn't like us to
-          // index arbitrary symbols on objects, so we pretend they're just
-          // strings.
-          const desc = descs[/** @type {string} */ (name)];
-          if ('value' in desc) {
-            // todo uncurried form
+          if (objectHasOwnProperty(desc, 'value')) {
             enqueue(desc.value, `${pathname}`);
           } else {
             enqueue(desc.get, `${pathname}(get)`);
@@ -119,15 +136,16 @@ export const makeHardener = () => {
 
       function dequeue() {
         // New values added before forEach() has finished will be visited.
-        toFreeze.forEach(freezeAndTraverse); // todo curried forEach
+        setForEach(toFreeze, freezeAndTraverse);
+      }
+
+      /** @param {any} value */
+      function markHardened(value) {
+        weaksetAdd(hardened, value);
       }
 
       function commit() {
-        // todo curried forEach
-        // we capture the real WeakSet.prototype.add above, in case someone
-        // changes it. The two-argument form of forEach passes the second
-        // argument as the 'this' binding, so we add to the correct set.
-        toFreeze.forEach(hardened.add, hardened);
+        setForEach(toFreeze, markHardened);
       }
 
       enqueue(root);

@@ -4,11 +4,18 @@
 // @ts-check
 
 import {
+  Error,
+  Set,
+  String,
+  TypeError,
   defineProperty,
-  getOwnPropertyNames,
   getOwnPropertyDescriptor,
   getOwnPropertyDescriptors,
+  getOwnPropertyNames,
+  isObject,
   objectHasOwnProperty,
+  ownKeys,
+  setHas,
 } from './commons.js';
 
 import {
@@ -16,12 +23,6 @@ import {
   moderateEnablements,
   severeEnablements,
 } from './enablements.js';
-
-const { ownKeys } = Reflect;
-
-function isObject(obj) {
-  return obj !== null && typeof obj === 'object';
-}
 
 /**
  * For a special set of properties defined in the `enablement` whitelist,
@@ -97,7 +98,7 @@ export default function enablePropertyOverrides(
         configurable: false,
       });
 
-      const isDebug = debugProperties.has(prop);
+      const isDebug = setHas(debugProperties, prop);
 
       function setter(newValue) {
         if (obj === this) {

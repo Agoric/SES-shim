@@ -1,4 +1,13 @@
-import { defineProperty, apply, freeze, weaksetAdd } from './commons.js';
+import {
+  WeakSet,
+  defineProperty,
+  freeze,
+  functionPrototype,
+  functionToString,
+  stringEndsWith,
+  weaksetAdd,
+  weaksetHas,
+} from './commons.js';
 
 const nativeSuffix = ') { [native code] }';
 
@@ -16,14 +25,12 @@ export const tameFunctionToString = () => {
   if (markVirtualizedNativeFunction === undefined) {
     const virtualizedNativeFunctions = new WeakSet();
 
-    const originalFunctionToString = Function.prototype.toString;
-
     const tamingMethods = {
       toString() {
-        const str = apply(originalFunctionToString, this, []);
+        const str = functionToString(this, []);
         if (
-          str.endsWith(nativeSuffix) ||
-          !virtualizedNativeFunctions.has(this)
+          stringEndsWith(str, nativeSuffix) ||
+          !weaksetHas(virtualizedNativeFunctions, this)
         ) {
           return str;
         }
@@ -31,7 +38,7 @@ export const tameFunctionToString = () => {
       },
     };
 
-    defineProperty(Function.prototype, 'toString', {
+    defineProperty(functionPrototype, 'toString', {
       value: tamingMethods.toString,
     });
 

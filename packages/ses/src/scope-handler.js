@@ -1,7 +1,10 @@
-/* global globalThis */
-
 import {
+  Error,
+  FERAL_EVAL,
+  Proxy,
+  String,
   getOwnPropertyDescriptor,
+  globalThis,
   immutableObject,
   reflectGet,
   reflectSet,
@@ -9,12 +12,6 @@ import {
 import { assert } from './error/assert.js';
 
 const { details: d, quote: q } = assert;
-
-// The original unsafe untamed eval function, which must not escape.
-// Sample at module initialization time, which is before lockdown can
-// repair it.  Use it only to build powerless abstractions.
-// eslint-disable-next-line no-eval
-const FERAL_EVAL = eval;
 
 /**
  * alwaysThrowHandler
@@ -162,7 +159,7 @@ export const createScopeHandler = (
 
     getOwnPropertyDescriptor(_target, prop) {
       // Coerce with `String` in case prop is a symbol.
-      const quotedProp = JSON.stringify(String(prop));
+      const quotedProp = q(String(prop));
       console.warn(
         `getOwnPropertyDescriptor trap on scopeHandler for ${quotedProp}`,
         new Error().stack,

@@ -1,4 +1,5 @@
 import {
+  Error,
   apply,
   construct,
   defineProperties,
@@ -43,6 +44,7 @@ export default function tameErrorConstructor(
     typeof OriginalError.captureStackTrace === 'function' ? 'v8' : 'unknown';
 
   const makeErrorConstructor = (_ = {}) => {
+    // eslint-disable-next-line no-shadow
     const ResultError = function Error(...rest) {
       let error;
       if (new.target === undefined) {

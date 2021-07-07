@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 /**
  * @file Exports {@code whitelist}, a recursively defined
  * JSON record enumerating all intrinsics and their properties

@@ -1,6 +1,5 @@
 // Copyright (C) 2019 Agoric, under Apache License 2.0
 // @ts-check
-/* global globalThis */
 
 // To ensure that this module operates without special privilege, it should
 // not reference the free variable `console` except for its own internal
@@ -12,7 +11,18 @@
 // of `console.js`. However, for code that does not have such access, this
 // module should not be observably impure.
 
-import { freeze, is, assign } from '../commons.js';
+import {
+  Error,
+  RangeError,
+  TypeError,
+  WeakMap,
+  assign,
+  freeze,
+  globalThis,
+  is,
+  weakmapGet,
+  weakmapSet,
+} from '../commons.js';
 import { an, bestEffortStringify } from './stringify-utils.js';
 import './types.js';
 import './internal-types.js';
@@ -189,13 +199,13 @@ const errorTags = new WeakMap();
  * @returns {string}
  */
 const tagError = (err, optErrorName = err.name) => {
-  let errorTag = errorTags.get(err);
+  let errorTag = weakmapGet(errorTags, err);
   if (errorTag !== undefined) {
     return errorTag;
   }
   errorTagNum += 1;
   errorTag = `${optErrorName}#${errorTagNum}`;
-  errorTags.set(err, errorTag);
+  weakmapSet(errorTags, err, errorTag);
   return errorTag;
 };
 

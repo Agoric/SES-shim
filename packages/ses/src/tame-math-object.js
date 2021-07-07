@@ -1,4 +1,10 @@
-import { create, getOwnPropertyDescriptors } from './commons.js';
+import {
+  Error,
+  Math,
+  create,
+  getOwnPropertyDescriptors,
+  objectPrototype,
+} from './commons.js';
 
 export default function tameMathObject(mathTaming = 'safe') {
   if (mathTaming !== 'safe' && mathTaming !== 'unsafe') {
@@ -11,7 +17,7 @@ export default function tameMathObject(mathTaming = 'safe') {
     originalMath,
   );
 
-  const sharedMath = create(Object.prototype, otherDescriptors);
+  const sharedMath = create(objectPrototype, otherDescriptors);
 
   return {
     '%InitialMath%': initialMath,

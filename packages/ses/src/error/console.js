@@ -5,7 +5,15 @@
 // debugging purposes in the declaration of `internalDebugConsole`, which is
 // normally commented out.
 
-import { defineProperty, freeze, fromEntries } from '../commons.js';
+import {
+  Error,
+  WeakSet,
+  defineProperty,
+  freeze,
+  fromEntries,
+  weaksetAdd,
+  weaksetHas,
+} from '../commons.js';
 import './types.js';
 import './internal-types.js';
 
@@ -258,11 +266,11 @@ const makeCausalConsole = (baseConsole, loggedErrorHandler) => {
    * @param {Error} error
    */
   const logError = error => {
-    if (errorsLogged.has(error)) {
+    if (weaksetHas(errorsLogged, error)) {
       return;
     }
     const errorTag = tagError(error);
-    errorsLogged.add(error);
+    weaksetAdd(errorsLogged, error);
     const subErrors = [];
     const messageLogArgs = takeMessageLogArgs(error);
     const noteLogArgsArray = takeNoteLogArgsArray(error, noteCallback);

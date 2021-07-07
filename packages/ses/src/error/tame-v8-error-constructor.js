@@ -1,4 +1,16 @@
-import { defineProperties, fromEntries } from '../commons.js';
+import {
+  WeakMap,
+  WeakSet,
+  weaksetHas,
+  weaksetAdd,
+  weakmapSet,
+  weakmapGet,
+  weakmapHas,
+  create,
+  defineProperties,
+  fromEntries,
+  reflectSet,
+} from '../commons.js';
 
 // Whitelist names from https://v8.dev/docs/stack-trace-api
 // Whitelisting only the names used by error-stack-shim/src/v8StackFrames
@@ -34,7 +46,7 @@ const safeV8CallSiteMethodNames = [
 const safeV8CallSiteFacet = callSite => {
   const methodEntry = name => [name, () => callSite[name]()];
   const o = fromEntries(safeV8CallSiteMethodNames.map(methodEntry));
-  return Object.create(o, {});
+  return create(o, {});
 };
 
 const safeV8SST = sst => sst.map(safeV8CallSiteFacet);
@@ -179,25 +191,25 @@ export const tameV8ErrorConstructor = (
         OriginalError.captureStackTrace(error, optFn);
         return;
       }
-      Reflect.set(error, 'stack', '');
+      reflectSet(error, 'stack', '');
     },
     // Shim of proposed special power, to reside by default only
     // in the start compartment, for getting the stack traceback
     // string associated with an error.
     // See https://tc39.es/proposal-error-stacks/
     getStackString(error) {
-      if (!ssts.has(error)) {
+      if (!weakmapHas(ssts, error)) {
         // eslint-disable-next-line no-void
         void error.stack;
       }
-      const sst = ssts.get(error);
+      const sst = weakmapGet(ssts, error);
       if (!sst) {
         return '';
       }
       return stackStringFromSST(error, sst);
     },
     prepareStackTrace(error, sst) {
-      ssts.set(error, sst);
+      weakmapSet(ssts, error, sst);
       if (errorTaming === 'unsafe') {
         const stackString = stackStringFromSST(error, sst);
         return `${error}${stackString}`;
@@ -231,17 +243,17 @@ export const tameV8ErrorConstructor = (
   const systemPrepareFnSet = new WeakSet([defaultPrepareFn]);
 
   const systemPrepareFnFor = inputPrepareFn => {
-    if (systemPrepareFnSet.has(inputPrepareFn)) {
+    if (weaksetHas(systemPrepareFnSet, inputPrepareFn)) {
       return inputPrepareFn;
     }
     // Use concise methods to obtain named functions without constructors.
     const systemMethods = {
       prepareStackTrace(error, sst) {
-        ssts.set(error, sst);
+        weakmapSet(ssts, error, sst);
         return inputPrepareFn(error, safeV8SST(sst));
       },
     };
-    systemPrepareFnSet.add(systemMethods.prepareStackTrace);
+    weaksetAdd(systemPrepareFnSet, systemMethods.prepareStackTrace);
     return systemMethods.prepareStackTrace;
   };
 

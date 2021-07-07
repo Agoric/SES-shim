@@ -1,8 +1,20 @@
+import { assert } from './error/assert.js';
 import { getDeferredExports } from './module-proxy.js';
-import { create, entries, keys, freeze, defineProperty } from './commons.js';
+import {
+  Error,
+  Map,
+  ReferenceError,
+  SyntaxError,
+  TypeError,
+  create,
+  defineProperty,
+  entries,
+  freeze,
+  isArray,
+  keys,
+} from './commons.js';
 
-// q, for enquoting strings in error messages.
-const q = JSON.stringify;
+const { quote: q } = assert;
 
 export const makeThirdPartyModuleInstance = (
   compartmentPrivateFields,
@@ -23,7 +35,7 @@ export const makeThirdPartyModuleInstance = (
 
   if (staticModuleRecord.exports) {
     if (
-      !Array.isArray(staticModuleRecord.exports) ||
+      !isArray(staticModuleRecord.exports) ||
       staticModuleRecord.exports.some(name => typeof name !== 'string')
     ) {
       throw new TypeError(

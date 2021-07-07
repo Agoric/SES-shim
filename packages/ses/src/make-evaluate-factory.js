@@ -1,9 +1,4 @@
-import { arrayJoin } from './commons.js';
-
-// The original unsafe untamed Function constructor, which must not escape.
-// Sample at module initialization time, which is before lockdown can
-// repair it. Use it only to build powerless abstractions.
-const FERAL_FUNCTION = Function;
+import { FERAL_FUNCTION, arrayJoin } from './commons.js';
 
 /**
  * buildOptimizer()

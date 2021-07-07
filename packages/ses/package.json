@@ -84,6 +84,73 @@
   "eslintConfig": {
     "extends": [
       "@endo"
+    ],
+    "rules": {
+      "no-restricted-globals": [
+        "error",
+        "Array",
+        "ArrayBuffer",
+        "Atomics",
+        "BigInt",
+        "BigInt64Array",
+        "BigUint64Array",
+        "Boolean",
+        "DataView",
+        "Date",
+        "Error",
+        "EvalError",
+        "Float32Array",
+        "Float64Array",
+        "Function",
+        "HandledPromise",
+        "Int16Array",
+        "Int32Array",
+        "Int8Array",
+        "JSON",
+        "Map",
+        "Math",
+        "Number",
+        "Object",
+        "Promise",
+        "Proxy",
+        "RangeError",
+        "ReferenceError",
+        "Reflect",
+        "RegExp",
+        "Set",
+        "SharedArrayBuffer",
+        "String",
+        "Symbol",
+        "SyntaxError",
+        "TypeError",
+        "URIError",
+        "Uint16Array",
+        "Uint32Array",
+        "Uint8Array",
+        "Uint8ClampedArray",
+        "WeakMap",
+        "WeakSet",
+        "decodeURI",
+        "decodeURIComponent",
+        "encodeURI",
+        "encodeURIComponent",
+        "escape",
+        "eval",
+        "globalThis",
+        "isFinite",
+        "isNaN",
+        "parseFloat",
+        "parseInt",
+        "unescape"
+      ]
+    },
+    "overrides": [
+      {
+        "files": ["test/**/*.js", "demos/**/*.js"],
+        "rules": {
+          "no-restricted-globals": "off"
+        }
+      }
     ]
   },
   "prettier": {
