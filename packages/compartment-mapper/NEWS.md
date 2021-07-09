@@ -1,5 +1,28 @@
 User-visible changes to the compartment mapper:
 
+# Next release
+
+- Adds a support for consistent hashing (SHA-512) of applications:
+  - `nodeReadPowers(fs, crypto)` produces the necessary capabilities for
+    hashing, when passed the Node.js `crypto` module.
+  - `writeArchive` and `makeArchive` accept a `computeSha512` capability and
+    use it to populate the `compartment-map.json` included within the archive
+    with the SHA-512 of every module in the archive.  This ensures that the
+    hash of `compartment-map.json` in a pair of archives is consistent only if
+    every file is consistent.
+  - `importArchive`, `loadArchive`, and `parseArchive` all optionally accept a
+    `computeSha512` capability, use it to verify the integrity of the archive
+    and provide the hash of the contained `compartment-map.json` so the caller
+    can verify the archive against a known hash.  `importArchive` and
+    `loadArchive` receive the hash function as a read power.  `parseArchive`
+    receives the hash function as an option.
+  - `hashLocation` produces the hash of an application off the filesystem,
+    suitable for validating that an archive with the same hash was generated
+    from identical files.
+- Also adds `mapLocation`, which produces the compartment map that _would_ be
+  in the corresponding archive for a package.
+- Ensures that IO errors on Node.js include a meaningful stack trace.
+
 # 0.4.1 (2021-16-19)
 
 - Fixes internal type references.

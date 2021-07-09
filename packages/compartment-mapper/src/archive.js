@@ -8,6 +8,7 @@
 /** @typedef {import('./types.js').ParseFn} ParseFn */
 /** @typedef {import('./types.js').ReadFn} ReadFn */
 /** @typedef {import('./types.js').ReadPowers} ReadPowers */
+/** @typedef {import('./types.js').HashPowers} HashPowers */
 /** @typedef {import('./types.js').Sources} Sources */
 /** @typedef {import('./types.js').WriteFn} WriteFn */
 
@@ -90,11 +91,12 @@ const translateCompartmentMap = (compartments, sources, renames) => {
     if (compartmentSources) {
       for (const name of keys(compartmentSources).sort()) {
         const source = compartmentSources[name];
-        const { location, parser, exit } = source;
+        const { location, parser, exit, sha512 } = source;
         modules[name] = {
           location,
           parser,
           exit,
+          sha512,
         };
       }
     }
@@ -151,12 +153,12 @@ const addSourcesToArchive = async (archive, sources) => {
  * @param {ReadFn | ReadPowers} powers
  * @param {string} moduleLocation
  * @param {ArchiveOptions} [options]
- * @returns {Promise<Uint8Array>}
+ * @returns {Promise<{archiveSources: Sources, archiveCompartmentMapBytes: Uint8Array}>}
  */
-export const makeArchive = async (powers, moduleLocation, options) => {
+const digestLocation = async (powers, moduleLocation, options) => {
   const { moduleTransforms, modules: exitModules = {}, dev = false } =
     options || {};
-  const { read } = unpackReadPowers(powers);
+  const { read, computeSha512 } = unpackReadPowers(powers);
   const {
     packageLocation,
     packageDescriptorText,
@@ -184,6 +186,7 @@ export const makeArchive = async (powers, moduleLocation, options) => {
     compartments,
     entry: { compartment: entryCompartmentName, module: entryModuleSpecifier },
   } = compartmentMap;
+
   /** @type {Sources} */
   const sources = {};
 
@@ -193,6 +196,7 @@ export const makeArchive = async (powers, moduleLocation, options) => {
     sources,
     compartments,
     exitModules,
+    computeSha512,
   );
 
   // Induce importHook to record all the necessary modules to import the given module specifier.
@@ -202,6 +206,7 @@ export const makeArchive = async (powers, moduleLocation, options) => {
     makeImportHook,
     moduleTransforms,
     parserForLanguage,
+    computeSha512,
     archiveOnly: true,
   });
   await compartment.load(entryModuleSpecifier);
@@ -231,11 +236,61 @@ export const makeArchive = async (powers, moduleLocation, options) => {
     archiveCompartmentMapText,
   );
 
+  return {
+    archiveCompartmentMapBytes,
+    archiveSources,
+  };
+};
+
+/**
+ * @param {ReadFn | ReadPowers} powers
+ * @param {string} moduleLocation
+ * @param {ArchiveOptions} [options]
+ * @returns {Promise<Uint8Array>}
+ */
+export const makeArchive = async (powers, moduleLocation, options) => {
+  const { archiveCompartmentMapBytes, archiveSources } = await digestLocation(
+    powers,
+    moduleLocation,
+    options,
+  );
+
   const archive = writeZip();
   await archive.write('compartment-map.json', archiveCompartmentMapBytes);
   await addSourcesToArchive(archive, archiveSources);
 
   return archive.snapshot();
+};
+
+/**
+ * @param {ReadFn | ReadPowers} powers
+ * @param {string} moduleLocation
+ * @param {ArchiveOptions} [options]
+ * @returns {Promise<Uint8Array>}
+ */
+export const mapLocation = async (powers, moduleLocation, options) => {
+  const { archiveCompartmentMapBytes } = await digestLocation(
+    powers,
+    moduleLocation,
+    options,
+  );
+  return archiveCompartmentMapBytes;
+};
+
+/**
+ * @param {HashPowers} powers
+ * @param {string} moduleLocation
+ * @param {ArchiveOptions} [options]
+ * @returns {Promise<string>}
+ */
+export const hashLocation = async (powers, moduleLocation, options) => {
+  const { archiveCompartmentMapBytes } = await digestLocation(
+    powers,
+    moduleLocation,
+    options,
+  );
+  const { computeSha512 } = powers;
+  return computeSha512(archiveCompartmentMapBytes);
 };
 
 /**

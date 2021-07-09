@@ -29,6 +29,7 @@
     "test": "ava"
   },
   "dependencies": {
+    "@agoric/babel-standalone": "^7.14.3",
     "@endo/compartment-mapper": "^0.4.1",
     "ses": "^0.13.4"
   },
