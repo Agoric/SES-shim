@@ -84,7 +84,10 @@
   "eslintConfig": {
     "extends": [
       "@endo"
-    ]
+    ],
+    "rules": {
+      "@endo/no-polymorphic-call": 1
+    }
   },
   "prettier": {
     "trailingComma": "all",
