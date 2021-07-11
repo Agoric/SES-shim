@@ -2,7 +2,6 @@ import { assert } from './error/assert.js';
 import { getDeferredExports } from './module-proxy.js';
 import {
   Error,
-  Map,
   ReferenceError,
   SyntaxError,
   TypeError,
