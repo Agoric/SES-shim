@@ -3,13 +3,22 @@
 /// <reference types="ses">
 
 import {
+  Error,
+  Map,
+  ReferenceError,
+  TypeError,
+  WeakMap,
+  WeakSet,
   assign,
   create,
   defineProperties,
   entries,
   freeze,
-  getOwnPropertyNames,
   getOwnPropertyDescriptors,
+  getOwnPropertyNames,
+  weakmapGet,
+  weakmapSet,
+  weaksetHas,
 } from './commons.js';
 import { initGlobalObject } from './global-object.js';
 import { performEval } from './evaluate.js';
@@ -47,7 +56,7 @@ const privateFields = new WeakMap();
 // However, any method that operates the module system will throw an exception
 // if these hooks are not available.
 const assertModuleHooks = compartment => {
-  const { importHook, resolveHook } = privateFields.get(compartment);
+  const { importHook, resolveHook } = weakmapGet(privateFields, compartment);
   if (typeof importHook !== 'function' || typeof resolveHook !== 'function') {
     throw new TypeError(
       'Compartment must be constructed with an importHook and a resolveHook for it to be able to load modules',
@@ -69,11 +78,11 @@ export const CompartmentPrototype = {
   constructor: InertCompartment,
 
   get globalThis() {
-    return privateFields.get(this).globalObject;
+    return weakmapGet(privateFields, this).globalObject;
   },
 
   get name() {
-    return privateFields.get(this).name;
+    return weakmapGet(privateFields, this).name;
   },
 
   /**
@@ -114,7 +123,7 @@ export const CompartmentPrototype = {
       localTransforms.push(rejectSomeDirectEvalExpressions);
     }
 
-    const compartmentFields = privateFields.get(this);
+    const compartmentFields = weakmapGet(privateFields, this);
     let { globalTransforms } = compartmentFields;
     const {
       globalObject,
@@ -155,7 +164,8 @@ export const CompartmentPrototype = {
 
   /* eslint-disable-next-line no-underscore-dangle */
   __isKnownScopeProxy__(value) {
-    return privateFields.get(this).knownScopeProxies.has(value);
+    const { knownScopeProxies } = weakmapGet(privateFields, this);
+    return weaksetHas(knownScopeProxies, value);
   },
 
   module(specifier) {
@@ -167,7 +177,7 @@ export const CompartmentPrototype = {
 
     const { exportsProxy } = getDeferredExports(
       this,
-      privateFields.get(this),
+      weakmapGet(privateFields, this),
       moduleAliases,
       specifier,
     );
@@ -270,7 +280,7 @@ export const makeCompartmentConstructor = (
             aliasNamespace,
           )} in parent compartment`,
         );
-      } else if (moduleAliases.get(aliasNamespace) === undefined) {
+      } else if (weakmapGet(moduleAliases, aliasNamespace) === undefined) {
         // TODO create and link a synthetic module instance from the given
         // namespace object.
         throw ReferenceError(
@@ -309,7 +319,7 @@ export const makeCompartmentConstructor = (
 
     const knownScopeProxies = new WeakSet();
 
-    privateFields.set(this, {
+    weakmapSet(privateFields, this, {
       name,
       globalTransforms,
       globalObject,

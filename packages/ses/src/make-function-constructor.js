@@ -1,4 +1,5 @@
 import {
+  FERAL_FUNCTION,
   arrayJoin,
   arrayPop,
   defineProperties,
@@ -6,11 +7,6 @@ import {
 } from './commons.js';
 import { performEval } from './evaluate.js';
 import { assert } from './error/assert.js';
-
-// The original unsafe untamed Function constructor, which must not escape.
-// Sample at module initialization time, which is before lockdown can
-// repair it.  Use it only to build powerless abstractions.
-const FERAL_FUNCTION = Function;
 
 /*
  * makeFunctionConstructor()
@@ -64,7 +60,7 @@ export const makeFunctionConstructor = (globaObject, options = {}) => {
     // Ensure that any function created in any evaluator in a realm is an
     // instance of Function in any evaluator of the same realm.
     prototype: {
-      value: Function.prototype,
+      value: FERAL_FUNCTION.prototype,
       writable: false,
       enumerable: false,
       configurable: false,
@@ -73,11 +69,11 @@ export const makeFunctionConstructor = (globaObject, options = {}) => {
 
   // Assert identity of Function.__proto__ accross all compartments
   assert(
-    getPrototypeOf(Function) === Function.prototype,
+    getPrototypeOf(FERAL_FUNCTION) === FERAL_FUNCTION.prototype,
     'Function prototype is the same accross compartments',
   );
   assert(
-    getPrototypeOf(newFunction) === Function.prototype,
+    getPrototypeOf(newFunction) === FERAL_FUNCTION.prototype,
     'Function constructor prototype is the same accross compartments',
   );
 

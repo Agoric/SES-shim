@@ -1,4 +1,11 @@
-import { defineProperties, getPrototypeOf, setPrototypeOf } from './commons.js';
+import {
+  FERAL_FUNCTION,
+  SyntaxError,
+  TypeError,
+  defineProperties,
+  getPrototypeOf,
+  setPrototypeOf,
+} from './commons.js';
 
 // This module replaces the original `Function` constructor, and the original
 // `%GeneratorFunction%`, `%AsyncFunction%` and `%AsyncGeneratorFunction%`,
@@ -38,7 +45,7 @@ import { defineProperties, getPrototypeOf, setPrototypeOf } from './commons.js';
 export default function tameFunctionConstructors() {
   try {
     // Verify that the method is not callable.
-    (0, Function.prototype.constructor)('return 1');
+    FERAL_FUNCTION.prototype.constructor('return 1');
   } catch (ignore) {
     // Throws, no need to patch.
     return {};
@@ -58,7 +65,7 @@ export default function tameFunctionConstructors() {
   function repairFunction(name, intrinsicName, declaration) {
     let FunctionInstance;
     try {
-      // eslint-disable-next-line no-eval
+      // eslint-disable-next-line no-eval, no-restricted-globals
       FunctionInstance = (0, eval)(declaration);
     } catch (e) {
       if (e instanceof SyntaxError) {
@@ -95,8 +102,8 @@ export default function tameFunctionConstructors() {
 
     // Reconstructs the inheritance among the new tamed constructors
     // to mirror the original specified in normal JS.
-    if (InertConstructor !== Function.prototype.constructor) {
-      setPrototypeOf(InertConstructor, Function.prototype.constructor);
+    if (InertConstructor !== FERAL_FUNCTION.prototype.constructor) {
+      setPrototypeOf(InertConstructor, FERAL_FUNCTION.prototype.constructor);
     }
 
     newIntrinsics[intrinsicName] = InertConstructor;

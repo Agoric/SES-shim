@@ -13,13 +13,20 @@ import {
   makeModuleInstance,
   makeThirdPartyModuleInstance,
 } from './module-instance.js';
-import { entries, isArray } from './commons.js';
+import {
+  Error,
+  Map,
+  ReferenceError,
+  entries,
+  isArray,
+  isObject,
+  mapGet,
+  mapHas,
+  mapSet,
+  weakmapGet,
+} from './commons.js';
 
 const { quote: q } = assert;
-
-function isObject(o) {
-  return Object(o) === o;
-}
 
 // `link` creates `ModuleInstances` and `ModuleNamespaces` for a module and its
 // transitive dependencies and connects their imports and exports.
@@ -33,9 +40,9 @@ export const link = (
   compartment,
   moduleSpecifier,
 ) => {
-  const { moduleRecords } = compartmentPrivateFields.get(compartment);
+  const { moduleRecords } = weakmapGet(compartmentPrivateFields, compartment);
 
-  const moduleRecord = moduleRecords.get(moduleSpecifier);
+  const moduleRecord = mapGet(moduleRecords, moduleSpecifier);
   if (moduleRecord === undefined) {
     throw new ReferenceError(`Missing link to module ${q(moduleSpecifier)}`);
   }
@@ -126,11 +133,11 @@ export const instantiate = (
     resolvedImports,
     staticModuleRecord,
   } = moduleRecord;
-  const { instances } = compartmentPrivateFields.get(compartment);
+  const { instances } = weakmapGet(compartmentPrivateFields, compartment);
 
   // Memoize.
-  if (instances.has(moduleSpecifier)) {
-    return instances.get(moduleSpecifier);
+  if (mapHas(instances, moduleSpecifier)) {
+    return mapGet(instances, moduleSpecifier);
   }
 
   validateStaticModuleRecord(staticModuleRecord, moduleSpecifier);
@@ -164,7 +171,7 @@ export const instantiate = (
   }
 
   // Memoize.
-  instances.set(moduleSpecifier, moduleInstance);
+  mapSet(instances, moduleSpecifier, moduleInstance);
 
   // Link dependency modules.
   for (const [importSpecifier, resolvedSpecifier] of entries(resolvedImports)) {
@@ -174,7 +181,7 @@ export const instantiate = (
       compartment,
       resolvedSpecifier,
     );
-    importedInstances.set(importSpecifier, importedInstance);
+    mapSet(importedInstances, importSpecifier, importedInstance);
   }
 
   return moduleInstance;

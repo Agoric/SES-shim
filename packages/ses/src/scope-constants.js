@@ -84,7 +84,7 @@ const keywords = [
  * Note: \w is equivalent [a-zA-Z_0-9]
  * See 11.6.1 Identifier Names
  */
-const identifierPattern = new RegExp('^[a-zA-Z_$][\\w$]*$');
+const identifierPattern = /^[a-zA-Z_$][\w$]*$/;
 
 /**
  * isValidIdentifierName()

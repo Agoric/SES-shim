@@ -13,9 +13,8 @@
 // limitations under the License.
 
 // @ts-check
-/* global globalThis */
 
-import { keys } from './commons.js';
+import { globalThis, is, keys, ownKeys } from './commons.js';
 import { makeHardener } from './make-hardener.js';
 import { makeIntrinsicsCollector } from './intrinsics.js';
 import whitelistIntrinsics from './whitelist-intrinsics.js';
@@ -141,7 +140,7 @@ export const repairIntrinsics = (
 
   // Assert that only supported options were passed.
   // Use Reflect.ownKeys to reject symbol-named properties as well.
-  const extraOptionsNames = Reflect.ownKeys(extraOptions);
+  const extraOptionsNames = ownKeys(extraOptions);
   assert(
     extraOptionsNames.length === 0,
     d`lockdown(): non supported option ${q(extraOptionsNames)}`,
@@ -195,13 +194,13 @@ export const repairIntrinsics = (
    */
   const seemsToBeLockedDown = () => {
     return (
-      Function.prototype.constructor !== Function &&
+      globalThis.Function.prototype.constructor !== globalThis.Function &&
       typeof globalThis.harden === 'function' &&
       typeof globalThis.lockdown === 'function' &&
-      Date.prototype.constructor !== Date &&
-      typeof Date.now === 'function' &&
+      globalThis.Date.prototype.constructor !== globalThis.Date &&
+      typeof globalThis.Date.now === 'function' &&
       // @ts-ignore
-      Object.is(Date.prototype.constructor.now(), NaN)
+      is(globalThis.Date.prototype.constructor.now(), NaN)
     );
   };
 

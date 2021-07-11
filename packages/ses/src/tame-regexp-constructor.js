@@ -1,10 +1,16 @@
-import { defineProperties, getOwnPropertyDescriptor } from './commons.js';
+import {
+  Error,
+  RegExp as OriginalRegExp,
+  construct,
+  defineProperties,
+  getOwnPropertyDescriptor,
+  speciesSymbol,
+} from './commons.js';
 
 export default function tameRegExpConstructor(regExpTaming = 'safe') {
   if (regExpTaming !== 'safe' && regExpTaming !== 'unsafe') {
     throw new Error(`unrecognized regExpTaming ${regExpTaming}`);
   }
-  const OriginalRegExp = RegExp;
   const RegExpPrototype = OriginalRegExp.prototype;
 
   const makeRegExpConstructor = (_ = {}) => {
@@ -13,7 +19,7 @@ export default function tameRegExpConstructor(regExpTaming = 'safe') {
       if (new.target === undefined) {
         return OriginalRegExp(...rest);
       }
-      return Reflect.construct(OriginalRegExp, rest, new.target);
+      return construct(OriginalRegExp, rest, new.target);
     };
 
     defineProperties(ResultRegExp, {
@@ -24,10 +30,7 @@ export default function tameRegExpConstructor(regExpTaming = 'safe') {
         enumerable: false,
         configurable: false,
       },
-      [Symbol.species]: getOwnPropertyDescriptor(
-        OriginalRegExp,
-        Symbol.species,
-      ),
+      [speciesSymbol]: getOwnPropertyDescriptor(OriginalRegExp, speciesSymbol),
     });
     return ResultRegExp;
   };

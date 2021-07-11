@@ -1,6 +1,18 @@
 // @ts-check
 
-import { freeze } from '../commons.js';
+import {
+  Error,
+  Set,
+  String,
+  freeze,
+  is,
+  setAdd,
+  setHas,
+  stringStartsWith,
+  stringIncludes,
+  stringifyJson,
+  toStringTagSymbol,
+} from '../commons.js';
 
 /**
  * Prepend the correct indefinite article onto a noun, typically a typeof
@@ -11,7 +23,7 @@ import { freeze } from '../commons.js';
  */
 const an = str => {
   str = `${str}`;
-  if (str.length >= 1 && 'aeiouAEIOU'.includes(str[0])) {
+  if (str.length >= 1 && stringIncludes('aeiouAEIOU', str[0])) {
     return `an ${str}`;
   }
   return `a ${str}`;
@@ -54,14 +66,14 @@ const bestEffortStringify = (payload, spaces = undefined) => {
         if (val === null) {
           return null;
         }
-        if (seenSet.has(val)) {
+        if (setHas(seenSet, val)) {
           return '[Seen]';
         }
-        seenSet.add(val);
+        setAdd(seenSet, val);
         if (val instanceof Error) {
           return `[${val.name}: ${val.message}]`;
         }
-        if (Symbol.toStringTag in val) {
+        if (toStringTagSymbol in val) {
           // For the built-ins that have or inherit a `Symbol.toStringTag`-named
           // property, most of them inherit the default `toString` method,
           // which will print in a similar manner: `"[object Foo]"` vs
@@ -83,7 +95,7 @@ const bestEffortStringify = (payload, spaces = undefined) => {
           // purely in terms of JavaScript concepts. That's some of the
           // motivation for choosing that representation of remotables
           // and their remote presences in the first place.
-          return `[${val[Symbol.toStringTag]}]`;
+          return `[${val[toStringTagSymbol]}]`;
         }
         return val;
       }
@@ -91,7 +103,7 @@ const bestEffortStringify = (payload, spaces = undefined) => {
         return `[Function ${val.name || '<anon>'}]`;
       }
       case 'string': {
-        if (val.startsWith('[')) {
+        if (stringStartsWith(val, '[')) {
           return `[${val}]`;
         }
         return val;
@@ -104,7 +116,7 @@ const bestEffortStringify = (payload, spaces = undefined) => {
         return `[${val}n]`;
       }
       case 'number': {
-        if (Object.is(val, NaN)) {
+        if (is(val, NaN)) {
           return '[NaN]';
         } else if (val === Infinity) {
           return '[Infinity]';
@@ -119,7 +131,7 @@ const bestEffortStringify = (payload, spaces = undefined) => {
     }
   };
   try {
-    return JSON.stringify(payload, replacer, spaces);
+    return stringifyJson(payload, replacer, spaces);
   } catch (_err) {
     // Don't do anything more fancy here if there is any
     // chance that might throw, unless you surround that

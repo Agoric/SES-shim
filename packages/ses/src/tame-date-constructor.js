@@ -1,6 +1,6 @@
 // @ts-check
 
-import { defineProperties } from './commons.js';
+import { Error, Date, apply, construct, defineProperties } from './commons.js';
 
 export default function tameDateConstructor(dateTaming = 'safe') {
   if (dateTaming !== 'safe' && dateTaming !== 'unsafe') {
@@ -34,13 +34,15 @@ export default function tameDateConstructor(dateTaming = 'safe') {
   const makeDateConstructor = ({ powers = 'none' } = {}) => {
     let ResultDate;
     if (powers === 'original') {
+      // eslint-disable-next-line no-shadow
       ResultDate = function Date(...rest) {
         if (new.target === undefined) {
-          return Reflect.apply(OriginalDate, undefined, rest);
+          return apply(OriginalDate, undefined, rest);
         }
-        return Reflect.construct(OriginalDate, rest, new.target);
+        return construct(OriginalDate, rest, new.target);
       };
     } else {
+      // eslint-disable-next-line no-shadow
       ResultDate = function Date(...rest) {
         if (new.target === undefined) {
           return 'Invalid Date';
@@ -48,7 +50,7 @@ export default function tameDateConstructor(dateTaming = 'safe') {
         if (rest.length === 0) {
           rest = [NaN];
         }
-        return Reflect.construct(OriginalDate, rest, new.target);
+        return construct(OriginalDate, rest, new.target);
       };
     }
 

@@ -1,6 +1,6 @@
 // @ts-check
-/* global globalThis */
 
+import { Error, globalThis } from '../commons.js';
 import { loggedErrorHandler as defaultHandler } from './assert.js';
 import { makeCausalConsole } from './console.js';
 import './types.js';

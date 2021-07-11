@@ -45,8 +45,12 @@
 
 import { whitelist, FunctionInstance, isAccessorPermit } from './whitelist.js';
 import {
-  getPrototypeOf,
+  Error,
+  TypeError,
+  arrayIncludes,
   getOwnPropertyDescriptor,
+  getPrototypeOf,
+  isObject,
   objectHasOwnProperty,
   ownKeys,
 } from './commons.js';
@@ -89,7 +93,7 @@ export default function whitelistIntrinsics(
    * Validate the object's [[prototype]] against a permit.
    */
   function whitelistPrototype(path, obj, protoName) {
-    if (obj !== Object(obj)) {
+    if (!isObject(obj)) {
       throw new TypeError(`Object expected: ${path}, ${obj}, ${protoName}`);
     }
     const proto = getPrototypeOf(obj);
@@ -153,7 +157,7 @@ export default function whitelistIntrinsics(
         // Assert: the property value type is equal to that primitive.
 
         // eslint-disable-next-line no-lonely-if
-        if (primitives.includes(permit)) {
+        if (arrayIncludes(primitives, permit)) {
           // eslint-disable-next-line valid-typeof
           if (typeof value !== permit) {
             throw new TypeError(

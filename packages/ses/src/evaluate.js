@@ -1,7 +1,13 @@
 // Portions adapted from V8 - Copyright 2016 the V8 project authors.
 // https://github.com/v8/v8/blob/master/src/builtins/builtins-function.cc
 
-import { apply, immutableObject, proxyRevocable } from './commons.js';
+import {
+  WeakSet,
+  apply,
+  immutableObject,
+  proxyRevocable,
+  weaksetAdd,
+} from './commons.js';
 import { getScopeConstants } from './scope-constants.js';
 import { createScopeHandler } from './scope-handler.js';
 import { applyTransforms, mandatoryTransforms } from './transforms.js';
@@ -57,7 +63,7 @@ export const performEval = (
   let err;
   try {
     // Ensure that "this" resolves to the safe global.
-    knownScopeProxies.add(scopeProxyRevocable.proxy);
+    weaksetAdd(knownScopeProxies, scopeProxyRevocable.proxy);
     return apply(evaluate, globalObject, [source]);
   } catch (e) {
     // stash the child-code error in hopes of debugging the internal failure

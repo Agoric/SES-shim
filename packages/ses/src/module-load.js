@@ -6,7 +6,14 @@
 // module's "imports" with the more specific "resolvedImports" as inferred from
 // the particular compartment's "resolveHook".
 
-import { create, values, freeze } from './commons.js';
+import {
+  Promise,
+  TypeError,
+  ReferenceError,
+  create,
+  values,
+  freeze,
+} from './commons.js';
 import { assert } from './error/assert.js';
 
 const { details: d, quote: q } = assert;

@@ -1,4 +1,11 @@
-import { getOwnPropertyNames, defineProperty } from './commons.js';
+import {
+  Error,
+  Object,
+  String,
+  TypeError,
+  getOwnPropertyNames,
+  defineProperty,
+} from './commons.js';
 import { assert } from './error/assert.js';
 
 const { details: d, quote: q } = assert;
