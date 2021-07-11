@@ -46,9 +46,10 @@ export const makeEvaluateFactory = (constants = []) => {
   // - keywords like 'function' which are reserved keywords, and cannot be
   //   used as a variables, so they is not part to the optimizer.
   // - when 'eval' is looked up in the proxy, and it's the first time it is
-  //   looked up after useUnsafeEvaluator is turned on, the proxy returns the
-  //   eval intrinsic, and flips useUnsafeEvaluator back to false. Any reference
-  //   to 'eval' in that string will get the tamed evaluator.
+  //   looked up after allowNextEvalToBeUnsafe is turned on, the proxy returns
+  //   the powerful, unsafe eval intrinsic, and flips allowNextEvalToBeUnsafe
+  //   back to false. Any reference to 'eval' in that string will get the tamed
+  //   evaluator.
 
   return FERAL_FUNCTION(`
     with (this) {
