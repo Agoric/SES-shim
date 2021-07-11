@@ -7,6 +7,7 @@ import {
   getOwnPropertyDescriptor,
   globalThis,
   immutableObject,
+  objectHasOwnProperty,
   reflectGet,
   reflectSet,
 } from './commons.js';
@@ -112,7 +113,7 @@ export const createScopeHandler = (
       // Properties of the localObject.
       if (prop in localObject) {
         const desc = getOwnPropertyDescriptor(localObject, prop);
-        if ('value' in desc) {
+        if (objectHasOwnProperty(desc, 'value')) {
           // Work around a peculiar behavior in the specs, where
           // value properties are defined on the receiver.
           return reflectSet(localObject, prop, value);
