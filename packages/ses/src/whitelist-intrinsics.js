@@ -13,13 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This module removes all non-whitelisted properties found by recursively and
+// This module removes all non-allowed properties found by recursively and
 // reflectively walking own property chains.
 //
 // The prototype properties are type checked.
 //
 // In addition, it verifies that the `prototype`, `__proto__`, and
-// `constructor` properties do point to their whitelisted values.
+// `constructor` properties do point to their allowed values.
 //
 // Typically, this module will not be used directly, but via the
 // [lockdown-shim] which handles all necessary repairs and taming in SES.
@@ -75,7 +75,7 @@ function asStringPropertyName(path, prop) {
 
 /**
  * whitelistIntrinsics()
- * Removes all non-whitelisted properties found by recursively and
+ * Removes all non-allowed properties found by recursively and
  * reflectively walking own property chains.
  *
  * @param {Object} intrinsics
@@ -89,10 +89,10 @@ export default function whitelistIntrinsics(
   const primitives = ['undefined', 'boolean', 'number', 'string', 'symbol'];
 
   /*
-   * whitelistPrototype()
+   * visitPrototype()
    * Validate the object's [[prototype]] against a permit.
    */
-  function whitelistPrototype(path, obj, protoName) {
+  function visitPrototype(path, obj, protoName) {
     if (!isObject(obj)) {
       throw new TypeError(`Object expected: ${path}, ${obj}, ${protoName}`);
     }
@@ -118,14 +118,14 @@ export default function whitelistIntrinsics(
   }
 
   /*
-   * isWhitelistPropertyValue()
+   * isAllowedPropertyValue()
    * Whitelist a single property value against a permit.
    */
-  function isWhitelistPropertyValue(path, value, prop, permit) {
+  function isAllowedPropertyValue(path, value, prop, permit) {
     if (typeof permit === 'object') {
       // eslint-disable-next-line no-use-before-define
-      whitelistProperties(path, value, permit);
-      // The property is whitelisted.
+      visitProperties(path, value, permit);
+      // The property is allowed.
       return true;
     }
 
@@ -173,10 +173,10 @@ export default function whitelistIntrinsics(
   }
 
   /*
-   * isWhitelistProperty()
-   * Whitelist a single property against a permit.
+   * isAllowedProperty()
+   * Check whether a single property is allowed.
    */
-  function isWhitelistProperty(path, obj, prop, permit) {
+  function isAllowedProperty(path, obj, prop, permit) {
     const desc = getOwnPropertyDescriptor(obj, prop);
 
     // Is this a value property?
@@ -184,14 +184,14 @@ export default function whitelistIntrinsics(
       if (isAccessorPermit(permit)) {
         throw new TypeError(`Accessor expected at ${path}`);
       }
-      return isWhitelistPropertyValue(path, desc.value, prop, permit);
+      return isAllowedPropertyValue(path, desc.value, prop, permit);
     }
     if (!isAccessorPermit(permit)) {
       throw new TypeError(`Accessor not expected at ${path}`);
     }
     return (
-      isWhitelistPropertyValue(`${path}<get>`, desc.get, prop, permit.get) &&
-      isWhitelistPropertyValue(`${path}<set>`, desc.set, prop, permit.set)
+      isAllowedPropertyValue(`${path}<get>`, desc.get, prop, permit.get) &&
+      isAllowedPropertyValue(`${path}<set>`, desc.set, prop, permit.set)
     );
   }
 
@@ -215,51 +215,52 @@ export default function whitelistIntrinsics(
   }
 
   /*
-   * whitelistProperties()
-   * Whitelist all properties against a permit.
+   * visitProperties()
+   * Visit all properties for a permit.
    */
-  function whitelistProperties(path, obj, permit) {
+  function visitProperties(path, obj, permit) {
     if (obj === undefined) {
       return;
     }
 
     const protoName = permit['[[Proto]]'];
-    whitelistPrototype(path, obj, protoName);
+    visitPrototype(path, obj, protoName);
 
     for (const prop of ownKeys(obj)) {
       const propString = asStringPropertyName(path, prop);
       const subPath = `${path}.${propString}`;
       const subPermit = getSubPermit(obj, permit, propString);
 
-      if (subPermit) {
-        // Property has a permit.
-        if (isWhitelistProperty(subPath, obj, prop, subPermit)) {
-          // Property is whitelisted.
-          // eslint-disable-next-line no-continue
-          continue;
+      if (!subPermit || !isAllowedProperty(subPath, obj, prop, subPermit)) {
+        // Either the object lacks a permit or the object doesn't match the
+        // permit.
+        // If the permit is specifically false, not merely undefined,
+        // this is a property we expect to see because we know it exists in
+        // some environments and we have expressly decided to exclude it.
+        // Any other disallowed property is one we have not audited and we log
+        // that we are removing it so we know to look into it, as happens when
+        // the language evolves new features to existing intrinsics.
+        if (subPermit !== false) {
+          // This call to `console.log` is intentional. It is not a vestige
+          // of a debugging attempt. See the comment at top of file for an
+          // explanation.
+          console.log(`Removing ${subPath}`);
         }
-      }
-
-      if (subPermit !== false) {
-        // This call to `console.log` is intentional. It is not a vestige
-        // of a debugging attempt. See the comment at top of file for an
-        // explanation.
-        console.log(`Removing ${subPath}`);
-      }
-      try {
-        delete obj[prop];
-      } catch (err) {
-        if (prop in obj) {
-          console.error(`failed to delete ${subPath}`, err);
-        } else {
-          console.error(`deleting ${subPath} threw`, err);
+        try {
+          delete obj[prop];
+        } catch (err) {
+          if (prop in obj) {
+            console.error(`failed to delete ${subPath}`, err);
+          } else {
+            console.error(`deleting ${subPath} threw`, err);
+          }
+          throw err;
         }
-        throw err;
       }
     }
   }
 
   // Start path with 'intrinsics' to clarify that properties are not
   // removed from the global object by the whitelisting operation.
-  whitelistProperties('intrinsics', intrinsics, whitelist);
+  visitProperties('intrinsics', intrinsics, whitelist);
 }
