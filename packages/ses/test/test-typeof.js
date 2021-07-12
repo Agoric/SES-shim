@@ -7,9 +7,7 @@ test('typeof', t => {
 
   const c = new Compartment();
 
-  t.throws(() => c.evaluate('DEFINITELY_NOT_DEFINED'), {
-    instanceOf: ReferenceError,
-  });
+  t.is(c.evaluate('DEFINITELY_NOT_DEFINED'), undefined);
   t.is(c.evaluate('typeof DEFINITELY_NOT_DEFINED'), 'undefined');
 
   t.is(c.evaluate('typeof 4'), 'number');

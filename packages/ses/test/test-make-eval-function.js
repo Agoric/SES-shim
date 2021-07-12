@@ -11,7 +11,7 @@ test('makeEvalFunction - leak', t => {
   const globalObject = {};
   const safeEval = makeEvalFunction(globalObject);
 
-  t.throws(() => safeEval('none'), { instanceOf: ReferenceError });
+  t.is(safeEval('none'), undefined);
   t.is(safeEval('this.none'), undefined);
 
   globalThis.none = 5;

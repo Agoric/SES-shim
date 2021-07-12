@@ -12,7 +12,7 @@ test('SharedArrayBuffer should be removed because it is not on the whitelist', t
   const c = new Compartment();
   // we seem to manage both of these for properties that never existed
   // in the first place
-  t.throws(() => c.evaluate('XYZ'), { instanceOf: ReferenceError });
+  t.is(c.evaluate('XYZ'), undefined);
   t.is(c.evaluate('typeof XYZ'), 'undefined');
   const have = typeof SharedArrayBuffer !== 'undefined';
   if (have) {

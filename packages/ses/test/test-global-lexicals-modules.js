@@ -58,11 +58,8 @@ test('endowments prototypically inherited properties are not mentionable', async
   const endowments = { __proto__: { hello: 'World!' } };
   const compartment = makeCompartment(endowments);
 
-  try {
-    await compartment.import('./main.js');
-  } catch (error) {
-    t.truthy(true);
-  }
+  const moduleNS = await compartment.import('./main.js');
+  t.is(moduleNS.whom, undefined);
 });
 
 test('endowments prototypically inherited properties are not enumerable', async t => {

@@ -30,9 +30,7 @@ test('endowments prototypically inherited properties are not mentionable', t => 
   const modules = {};
   const compartment = new Compartment(endowments, modules);
 
-  t.throws(() => compartment.evaluate('hello'), {
-    message: /hello is not defined/,
-  });
+  t.is(compartment.evaluate('hello'), undefined);
 });
 
 test('endowments prototypically inherited properties are not enumerable', t => {
@@ -90,9 +88,7 @@ test('global lexicals prototypically inherited properties are not mentionable', 
   const globalLexicals = { __proto__: { hello: 'World!' } };
   const compartment = new Compartment(endowments, modules, { globalLexicals });
 
-  t.throws(() => compartment.evaluate('hello'), {
-    message: /hello is not defined/,
-  });
+  t.is(compartment.evaluate('hello'), undefined);
 });
 
 test('global lexicals prototypically inherited properties are not reachable from global object', t => {
