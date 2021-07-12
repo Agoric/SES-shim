@@ -1,7 +1,17 @@
-# Secure ECMAScript (SES)
+# SES
 
-Secure ECMAScript (SES) is an execution environment that provides fine-grained
-sandboxing with Compartments.
+SES is a slight modification to the JavaScript language that enables programs
+to defend their own correctness, mostly by disabling dangerous features.
+JavaScript without SES is highly reconfigurable at runtime, so programs can
+easily interfere with each other by altering shared objects.
+After "lockdown", JS becomes SES, all of the shared intrinsics and their
+prototypes are "hardened", objects shared between programs can also be
+hardened, and tenant programs can be run in "compartments" where they can only
+use the powerful objects they're expressly passed.
+
+SES is useful for preventing prototype pollution attacks, is part of a solution
+for preventing supply-chain attacks, and can be used to safely host plugins or
+other user programs.
 
 * **Compartments** Compartments are separate execution contexts: each one has
   its own global object and global lexical scope.
@@ -15,10 +25,6 @@ sandboxing with Compartments.
   ambient authority. They are created without host-provided APIs, (for example
   no `fetch`). Compartments can be selectively endowed with powerful arguments,
   globals, or modules.
-
-[Learn about the SES specification](https://github.com/tc39/proposal-ses).
-
-[Learn how to use SES in your own project](https://ses-secure-ecmascript.readthedocs.io/en/latest).
 
 Secure ECMAScript (SES) is a frozen environment for running ECMAScript
 (Javascript) 'strict' mode programs with no ambient authority in their global
@@ -54,6 +60,11 @@ For a script tag, the content encoding charset must be UTF-8, either by virtue
 of `<head><meta charset="utf-8"></head>` (a general best practice for all HTML
 files) or specifically `<script src="node_modules/ses/dist/ses.umd.min.js"
 charset="utf-8">`.
+
+SES can be bundled by Webpack, Browseriy, Rollup, and Parcel, but any of these
+tools could be coopted with a supply-chain attack to invalidate the security
+properties of SES.  We generally recommend installing SES as a separate script
+tag.
 
 ### Lockdown
 
@@ -510,8 +521,8 @@ console uses these side tables to output more informative diagnostics.
 
 Please help us practice coordinated security bug disclosure, by using the
 instructions in
-[SECURITY.md](https://github.com/Agoric/ses-shim/blob/master/SECURITY.md)
+[SECURITY.md](https://github.com/endojs/endo/blob/master/packages/ses/SECURITY.md)
 to report security-sensitive bugs privately.
 
 For non-security bugs, please use the [regular Issues
-page](https://github.com/Agoric/ses-shim/issues).
+page](https://github.com/endojs/endo/issues).
