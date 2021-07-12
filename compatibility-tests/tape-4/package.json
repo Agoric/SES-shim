@@ -1,0 +1,13 @@
+{
+  "name": "tape-4-compat",
+  "private": true,
+  "version": "0",
+  "scripts": {
+    "test": "node -r esm test.js"
+  },
+  "dependencies": {
+    "tape": "4.13.2"
+  },
+  "devDependencies": {
+  }
+}
