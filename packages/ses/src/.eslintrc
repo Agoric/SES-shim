@@ -1,0 +1,5 @@
+{
+  "rules": {
+      "@endo/no-polymorphic-call": "warn"
+  }
+}
