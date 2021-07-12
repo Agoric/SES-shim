@@ -2,8 +2,6 @@
 import 'ses';
 import './types.js';
 
-const { apply } = Reflect;
-
 /**
  * Just forwards to global `console.error`.
  *
@@ -29,7 +27,7 @@ const isPromise = maybePromise =>
 const logErrorFirst = (func, args, name, logger = defaultLogger) => {
   let result;
   try {
-    result = apply(func, undefined, args);
+    result = func(...args);
   } catch (err) {
     logger(`THROWN from ${name}:`, err);
     throw err;
@@ -47,6 +45,45 @@ const logErrorFirst = (func, args, name, logger = defaultLogger) => {
   }
 };
 
+/**
+ * @param {Assertions} originalT
+ * @param {Logger} logger
+ * @returns {Assertions}
+ */
+const wrapAssertions = (originalT, logger) => {
+  /**
+   * Inherits all methods from the originalT that it does not override.
+   * Those that it does override it wraps behavior around a `super` call,
+   * and so uses concise method syntax rather than arrow functions.
+   *
+   * See TODO comment on cast below to remove the `{unknown}` type declaration.
+   *
+   * @type {unknown}
+   */
+  const newT = harden({
+    __proto__: originalT,
+    fail(message) {
+      const err = new Error(message);
+      logger('FAILED by t.fail', err);
+      return super.fail(message);
+    },
+    notThrows(originalFn, message) {
+      const newFn = (...args) =>
+        logErrorFirst(originalFn, args, 'notThrows', logger);
+      return super.notThrows(newFn, message);
+    },
+    notThrowsAsync(originalFn, message) {
+      const newFn = (...args) =>
+        logErrorFirst(originalFn, args, 'notThrowsAsync', logger);
+      return super.notThrowsAsync(newFn, message);
+    },
+  });
+  // TODO The `{unknown}` above and the cast here seem to be needed
+  // because TypeScript doesn't understand `__proto__:` in an object
+  // literal implies inheritance, and thus usually subtyping.
+  return /** @type {Assertions} */ (newT);
+};
+
 const testerMethodsWhitelist = [
   'after',
   'afterEach',
@@ -61,16 +98,16 @@ const testerMethodsWhitelist = [
 
 /**
  * @param {TesterFunc} testerFunc
- * @param {Logger} [logger]
+ * @param {Logger} logger
  * @returns {TesterFunc} Not yet frozen!
  */
-const wrapTester = (testerFunc, logger = defaultLogger) => {
+const wrapTester = (testerFunc, logger) => {
   /** @type {TesterFunc} */
   const testerWrapper = (title, implFunc, ...otherArgs) => {
     /** @type {ImplFunc} */
-    const testFuncWrapper = t => {
-      harden(t);
-      return logErrorFirst(implFunc, [t, ...otherArgs], 'ava test', logger);
+    const testFuncWrapper = originalT => {
+      const newT = wrapAssertions(originalT, logger);
+      return logErrorFirst(implFunc, [newT, ...otherArgs], 'ava test', logger);
     };
     if (implFunc && implFunc.title) {
       testFuncWrapper.title = implFunc.title;
@@ -106,7 +143,7 @@ const wrapTester = (testerFunc, logger = defaultLogger) => {
  * propagating into `rawTest`.
  *
  * @param {TesterInterface} avaTest
- * @param {Logger} [logger]
+ * @param {Logger=} logger
  * @returns {TesterInterface}
  */
 const wrapTest = (avaTest, logger = defaultLogger) => {
@@ -117,7 +154,7 @@ const wrapTest = (avaTest, logger = defaultLogger) => {
       /** @type {TesterFunc} */
       const testerMethod = (title, implFunc, ...otherArgs) =>
         avaTest[methodName](title, implFunc, ...otherArgs);
-      testerWrapper[methodName] = wrapTester(testerMethod);
+      testerWrapper[methodName] = wrapTester(testerMethod, logger);
     }
   }
   harden(testerWrapper);
