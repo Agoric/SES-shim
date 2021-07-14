@@ -1,4 +1,4 @@
-/* eslint max-classes-per-file: "off" */
+/* eslint-disable max-classes-per-file */
 import test from 'ava';
 import '../index.js';
 

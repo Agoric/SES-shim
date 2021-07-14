@@ -1,4 +1,4 @@
-/* eslint max-depth: "off" */
+/* eslint-disable max-depth */
 import test from 'ava';
 import { getSourceURL } from '../src/get-source-url.js';
 

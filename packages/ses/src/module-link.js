@@ -1,4 +1,4 @@
-/* eslint no-underscore-dangle: ["off"] */
+/* eslint-disable no-underscore-dangle */
 
 // For brevity, in this file, as in module-load.js, the term "moduleRecord"
 // without qualification means "module compartment record".
